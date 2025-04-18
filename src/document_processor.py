@@ -44,7 +44,7 @@ class DocumentProcessor:
 if __name__ == "__main__":
     processor = DocumentProcessor()
     # Replace with path to your sample TXT file
-    chunks = processor.extract_text_from_txt("documents\TELIA for Coil - Dashboard User Guide.txt")
+    chunks = processor.extract_text_from_txt("documents/TELIA for Coil - Dashboard User Guide.txt")
     for i, chunk in enumerate(chunks):
         print(f"Chunk {i+1}:")
         print(f"Text: {chunk['text'][:100]}...")

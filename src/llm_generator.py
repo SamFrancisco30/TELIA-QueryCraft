@@ -2,8 +2,6 @@ from langchain.prompts import PromptTemplate
 from langchain_openai import OpenAI
 from sentence_transformers import SentenceTransformer
 from typing import List, Dict
-import numpy as np
-from transformers import pipeline
 import json
 import logging
 import os
@@ -17,9 +15,7 @@ logging.basicConfig(level=logging.INFO, filename="llm_generator.log", format="%(
 logger = logging.getLogger(__name__)
 
 class LLMGenerator:
-    def __init__(self, model_name: str = "t5-small"):
-        # Initialize T5 pipeline for text generation
-        self.t5_pipeline = pipeline("text2text-generation", model=model_name)
+    def __init__(self):
         llm = OpenAI()
         self.embedder = SentenceTransformer("all-MiniLM-L6-v2")
 
@@ -63,37 +59,14 @@ class LLMGenerator:
             logger.error(f"Error generating pairs: {e}")
             return []
 
-        # Deduplicate similar questions
-        return self._deduplicate_pairs(pairs)
+        return pairs
 
-    def _deduplicate_pairs(self, pairs: List[Dict[str, str]]) -> List[Dict[str, str]]:
-        """Remove duplicate questions based on semantic similarity."""
-        if not pairs:
-            return []
-        queries = [pair["query"] for pair in pairs]
-        embeddings = self.embedder.encode(queries)
-        unique_pairs = []
-        used_indices = set()
-
-        for i in range(len(embeddings)):
-            if i in used_indices:
-                continue
-            unique_pairs.append(pairs[i])
-            used_indices.add(i)
-            for j in range(i + 1, len(embeddings)):
-                if j not in used_indices:
-                    similarity = np.dot(embeddings[i], embeddings[j]) / (
-                        np.linalg.norm(embeddings[i]) * np.linalg.norm(embeddings[j])
-                    )
-                    if similarity > 0.9:  # Threshold for similarity
-                        used_indices.add(j)
-
-        return unique_pairs
+    
 
 if __name__ == "__main__":
     from document_processor import DocumentProcessor
     processor = DocumentProcessor()
-    generator = LLMGenerator(model_name="google/flan-t5-base")  # Try "google/flan-t5-base" for better results
+    generator = LLMGenerator()
     chunks = processor.extract_text_from_txt("documents/TELIA for Coil - Dashboard User Guide.txt")
     for chunk in chunks[:2]:  
         pairs = generator.generate_pairs(chunk)
